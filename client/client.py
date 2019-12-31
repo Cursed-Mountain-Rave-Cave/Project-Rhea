@@ -12,9 +12,42 @@ s.connect((TCP_IP, TCP_PORT))
 def send(login, password):
     loginJSON = json.dumps({"Login":login, "Password":password})
     msgJSON = json.dumps({"MessageType":"login", "Message": loginJSON})
-    n = s.send(msgJSON.encode('utf-8'))
+    s.send(msgJSON.encode('utf-8'))
+
+def receive():
+    try:
+        netData = []
+        balance = 0
+        b = s.recv(1).decode('utf-8')
+        if b != r'{':
+            return
+
+        netData.append(b)
+        balance += 1
+        while balance > 0:
+            b = s.recv(1).decode('utf-8')
+            
+            netData.append(b)
+
+            if b == r'{':
+                balance+=1
+            elif b == r'}':
+                balance-=1
+        print(''.join(netData))
+        msg = json.loads(''.join(netData))
+        print(msg)
+        login = json.loads(msg['Message'])
+        print(login)
+    except :
+        print("Error!")
 
 send("123", "123")
+print(0)
+receive()
+print(0)
 send("pl123", "pl123")
+print(0)
+receive()
+print(0)
 
 s.close()

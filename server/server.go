@@ -26,7 +26,6 @@ type Login struct {
 	Password string
 }
 
-/*
 func encode(login, password string) []byte {
 	user := Login{login, password}
 	userJSON, err := json.Marshal(user)
@@ -34,14 +33,14 @@ func encode(login, password string) []byte {
 		log.Fatalln(err)
 	}
 	log.Println(string(userJSON))
-	msg := Message{"login", userJSON}
+	msg := Message{"login", string(userJSON)}
 	msgJSON, err := json.Marshal(msg)
 	if err != nil {
 		log.Fatalln(err)
 	}
 	log.Println(string(msgJSON))
 	return msgJSON
-}*/
+}
 
 func decode(userJSON []byte) {
 	var msg Message
@@ -94,6 +93,14 @@ func handleConnection(c net.Conn) {
 		temp := strings.TrimSpace(string(netData))
 		log.Println("Get", temp, "from", c.RemoteAddr().String())
 		decode([]byte(temp))
+
+		var msg = encode("hello", "there")
+		log.Println("Send", msg, "to", c.RemoteAddr().String())
+		_, err = c.Write(msg)
+		if err != nil {
+			log.Println(err)
+			return
+		}
 	}
 }
 
