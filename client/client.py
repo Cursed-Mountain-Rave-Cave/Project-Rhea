@@ -1,5 +1,6 @@
 import socket
 import json
+import utils
  
 TCP_IP = '127.0.0.1'
 TCP_PORT = 25565
@@ -10,44 +11,33 @@ s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.connect((TCP_IP, TCP_PORT))
 
 def send(login, password):
-    loginJSON = json.dumps({"Login":login, "Password":password})
-    msgJSON = json.dumps({"MessageType":"login", "Message": loginJSON})
+    loginJSON = json.dumps({"login":login, "password":password})
+    msgJSON = json.dumps({"type":"login", "data": loginJSON})
     s.send(msgJSON.encode('utf-8'))
 
 def receive():
     try:
-        netData = []
-        balance = 0
-        b = s.recv(1).decode('utf-8')
-        if b != r'{':
-            return
-
-        netData.append(b)
-        balance += 1
-        while balance > 0:
-            b = s.recv(1).decode('utf-8')
-            
-            netData.append(b)
-
-            if b == r'{':
-                balance+=1
-            elif b == r'}':
-                balance-=1
+        netData = utils.receiveJSON(s)
+        
         print(''.join(netData))
         msg = json.loads(''.join(netData))
         print(msg)
-        login = json.loads(msg['Message'])
+        login = json.loads(msg['data'])
         print(login)
     except :
         print("Error!")
 
-send("123", "123")
-print(0)
+send("12}3", "123")
+print()
 receive()
-print(0)
+print('')
+send("pl1{23", "pl123")
+print('')
+receive()
+print('')
 send("pl123", "pl123")
-print(0)
+print('')
 receive()
-print(0)
+print('')
 
 s.close()

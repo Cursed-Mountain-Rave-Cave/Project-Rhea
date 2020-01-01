@@ -4,36 +4,21 @@ import (
 	"bufio"
 	"encoding/json"
 	"log"
-	"math/rand"
 	"net"
 	"os"
-	"strings"
+
+	"./utils"
+	"./web"
 )
-
-var (
-	random = rand.New(rand.NewSource(0))
-)
-
-//Message ss
-type Message struct {
-	MessageType string
-	Message     string
-}
-
-//Login ss
-type Login struct {
-	Login    string
-	Password string
-}
 
 func encode(login, password string) []byte {
-	user := Login{login, password}
+	user := web.Login{Login: login, Password: password}
 	userJSON, err := json.Marshal(user)
 	if err != nil {
 		log.Fatalln(err)
 	}
 	log.Println(string(userJSON))
-	msg := Message{"login", string(userJSON)}
+	msg := web.Message{Type: "login", Data: string(userJSON)}
 	msgJSON, err := json.Marshal(msg)
 	if err != nil {
 		log.Fatalln(err)
@@ -43,15 +28,15 @@ func encode(login, password string) []byte {
 }
 
 func decode(userJSON []byte) {
-	var msg Message
+	var msg web.Message
 	err := json.Unmarshal(userJSON, &msg)
 	if err != nil {
 		log.Fatalln(err)
 	}
 	log.Println(msg)
 
-	var user Login
-	err = json.Unmarshal([]byte(msg.Message), &user)
+	var user web.Login
+	err = json.Unmarshal([]byte(msg.Data), &user)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -63,40 +48,22 @@ func handleConnection(c net.Conn) {
 	log.Printf("Serving %s\n", c.RemoteAddr().String())
 	defer c.Close()
 	reader := bufio.NewReader(c)
+	writer := bufio.NewWriter(c)
 	for {
-		netData := []byte{}
-		balance := 0
-		b, err := reader.ReadByte()
-		if err != nil && b != byte('{') {
+		netData, err := utils.ReadJSON(reader)
+		if err != nil {
 			log.Println(err)
 			return
 		}
 
-		netData = append(netData, b)
-		balance++
-		for balance > 0 {
-			b, err := reader.ReadByte()
-			if err != nil {
-				log.Println(err)
-				return
-			}
-			netData = append(netData, b)
-
-			switch b {
-			case byte('{'):
-				balance++
-			case byte('}'):
-				balance--
-			}
-		}
-
-		temp := strings.TrimSpace(string(netData))
-		log.Println("Get", temp, "from", c.RemoteAddr().String())
-		decode([]byte(temp))
+		log.Println("Get", string(netData), "from", c.RemoteAddr().String())
+		decode(netData)
 
 		var msg = encode("hello", "there")
-		log.Println("Send", msg, "to", c.RemoteAddr().String())
-		_, err = c.Write(msg)
+		log.Println("Send", string(msg), "to", c.RemoteAddr().String())
+
+		_, err = writer.Write(msg)
+		err = writer.Flush()
 		if err != nil {
 			log.Println(err)
 			return
