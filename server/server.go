@@ -1,70 +1,67 @@
 package main
 
 import (
-	"bufio"
 	"encoding/json"
 	"log"
 	"net"
 	"os"
 
-	"./utils"
 	"./web"
 )
 
-func encode(login, password string) []byte {
-	user := web.Login{Login: login, Password: password}
-	userJSON, err := json.Marshal(user)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	log.Println(string(userJSON))
-	msg := web.Message{Type: "login", Data: string(userJSON)}
-	msgJSON, err := json.Marshal(msg)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	log.Println(string(msgJSON))
-	return msgJSON
+func handleLogin(c *web.Connection, login web.Login) error {
+	return c.SendResponse(web.NewInfo("You have been successfully logged in"))
 }
 
-func decode(userJSON []byte) {
-	var msg web.Message
-	err := json.Unmarshal(userJSON, &msg)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	log.Println(msg)
-
-	var user web.Login
-	err = json.Unmarshal([]byte(msg.Data), &user)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	log.Println(user)
-
+func handleRegister(c *web.Connection, register web.Register) error {
+	return c.SendResponse(web.NewInfo("You have been successfully registered"))
 }
 
-func handleConnection(c net.Conn) {
+func handleSendAll(c *web.Connection, sendAll web.SendAll) error {
+	return nil
+}
+
+func handleRequest(c *web.Connection, r web.Request) error {
+	switch r.Type {
+	case "login":
+		{
+			var login web.Login
+			err := json.Unmarshal([]byte(r.Data), &login)
+			if err != nil {
+				c.SendResponse(web.NewError(err.Error()))
+				return err
+			}
+			return handleLogin(c, login)
+		}
+	case "register":
+		{
+			var register web.Register
+			err := json.Unmarshal([]byte(r.Data), &register)
+			if err != nil {
+				c.SendResponse(web.NewError(err.Error()))
+				return err
+			}
+			return handleRegister(c, register)
+		}
+	case "send_all":
+		{
+
+		}
+	}
+	return nil
+}
+
+func handleConnection(c *web.Connection) {
 	log.Printf("Serving %s\n", c.RemoteAddr().String())
 	defer c.Close()
-	reader := bufio.NewReader(c)
-	writer := bufio.NewWriter(c)
+	defer log.Printf("Stop serving %s\n", c.RemoteAddr().String())
 	for {
-		netData, err := utils.ReadJSON(reader)
+		request, err := c.ReceiveRequest()
 		if err != nil {
 			log.Println(err)
 			return
 		}
-
-		log.Println("Get", string(netData), "from", c.RemoteAddr().String())
-		decode(netData)
-
-		var msg = encode("hello", "there")
-		log.Println("Send", string(msg), "to", c.RemoteAddr().String())
-
-		_, err = writer.Write(msg)
-		err = writer.Flush()
-		if err != nil {
+		if handleRequest(c, request) != nil {
 			log.Println(err)
 			return
 		}
@@ -89,6 +86,6 @@ func main() {
 		if err != nil {
 			log.Fatalln(err)
 		}
-		go handleConnection(c)
+		go handleConnection(web.NewConnection(c))
 	}
 }
