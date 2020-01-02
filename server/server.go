@@ -1,19 +1,25 @@
 package main
 
 import (
-	"encoding/json"
 	"log"
 	"net"
 	"os"
 
+	"./storage"
 	"./web"
 )
+
+var users = storage.NewUsers()
 
 func handleLogin(c *web.Connection, login web.Login) error {
 	return c.SendResponse(web.NewInfo("You have been successfully logged in"))
 }
 
 func handleRegister(c *web.Connection, register web.Register) error {
+	err := users.Register(c, register)
+	if err != nil {
+		return c.SendResponse(web.NewError(err.Error()))
+	}
 	return c.SendResponse(web.NewInfo("You have been successfully registered"))
 }
 
@@ -25,8 +31,7 @@ func handleRequest(c *web.Connection, r web.Request) error {
 	switch r.Type {
 	case "login":
 		{
-			var login web.Login
-			err := json.Unmarshal([]byte(r.Data), &login)
+			login, err := web.UnwrapLogin(r.Data)
 			if err != nil {
 				c.SendResponse(web.NewError(err.Error()))
 				return err
@@ -35,8 +40,7 @@ func handleRequest(c *web.Connection, r web.Request) error {
 		}
 	case "register":
 		{
-			var register web.Register
-			err := json.Unmarshal([]byte(r.Data), &register)
+			register, err := web.UnwrapRegister(r.Data)
 			if err != nil {
 				c.SendResponse(web.NewError(err.Error()))
 				return err

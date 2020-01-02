@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"fmt"
 	"sync"
 
 	"../web"
@@ -15,18 +16,40 @@ type User struct {
 
 //Users struct
 type Users struct {
-	Users   map[string]User
+	users   map[string]*User
 	rwmutex sync.RWMutex
 }
 
-var users Users
-
-func Login(web.Login) error {
-
-	return nil
+func NewUsers() *Users {
+	return &Users{users: make(map[string]*User)}
 }
 
-func Register(web.Register) error {
+/*
+//Login logs in user to users
+func (users *Users) Login(c *web.Connection, form web.Login) error {
+	users.rwmutex.Lock()
+	defer users.rwmutex.Unlock()
+	login, password := form.Login, form.Password
+	user, registered := users.users[login]
+	//make good login handler
+	if !registered {
+		return fmt.Errorf("User with login \"%s\" do not exist.", login)
+	}
+	if user.connection != nil {
+		return fmt.Errorf("User with login \"%s\" already online", login)
+	}
+	return nil
+}*/
 
+//Register adds new user to users
+func (users *Users) Register(c *web.Connection, form web.Register) error {
+	users.rwmutex.Lock()
+	defer users.rwmutex.Unlock()
+	login, password := form.Login, form.Password
+	_, registered := users.users[login]
+	if registered {
+		return fmt.Errorf("User with login \"%s\" already exist.", login)
+	}
+	users.users[login] = &User{login, password, nil}
 	return nil
 }

@@ -16,7 +16,7 @@ def login(login, password):
     s.send(msgJSON.encode('utf-8'))
 
 def register(login, password):
-    loginJSON = json.dumps({"register":login, "password":password})
+    loginJSON = json.dumps({"login":login, "password":password})
     msgJSON = json.dumps({"type":"register", "data": loginJSON})
     s.send(msgJSON.encode('utf-8'))
 

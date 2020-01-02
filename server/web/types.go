@@ -5,6 +5,10 @@ import (
 	"log"
 )
 
+/*==========================================================================
+	Basic structures
+===========================================================================*/
+
 //Request structure
 type Request struct {
 	Type string `json:"type"`
@@ -40,6 +44,10 @@ type Info struct {
 	Info string `json:"info"`
 }
 
+/*==========================================================================
+	Response structures
+===========================================================================*/
+
 //String return Info string representation
 func (r Info) String() string {
 	JSON, err := json.Marshal(r)
@@ -51,7 +59,7 @@ func (r Info) String() string {
 
 //NewInfo returns new info response
 func NewInfo(info string) Response {
-	return Response{Type: "error", Data: Error{info}.String()}
+	return Response{Type: "info", Data: Error{info}.String()}
 }
 
 //Error response structure
@@ -73,6 +81,25 @@ func NewError(err string) Response {
 	return Response{Type: "error", Data: Error{err}.String()}
 }
 
+//ReceiveAll response structure
+type ReceiveAll struct {
+	Login   string `json:"login"`
+	Message string `json:"message"`
+}
+
+//String return ReceiveAll string representation
+func (r ReceiveAll) String() string {
+	JSON, err := json.Marshal(r)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	return string(JSON)
+}
+
+/*==========================================================================
+	Request structures
+===========================================================================*/
+
 //Login request stucture
 type Login struct {
 	Login    string `json:"login"`
@@ -86,6 +113,16 @@ func (r Login) String() string {
 		log.Fatalln(err)
 	}
 	return string(JSON)
+}
+
+//UnwrapLogin convert JSON string to Login structure
+func UnwrapLogin(JSON string) (Login, error) {
+	var login Login
+	err := json.Unmarshal([]byte(JSON), &login)
+	if err != nil {
+		return Login{}, err
+	}
+	return login, nil
 }
 
 //Register request stucture
@@ -103,6 +140,16 @@ func (r Register) String() string {
 	return string(JSON)
 }
 
+//UnwrapRegister convert JSON string to Register structure
+func UnwrapRegister(JSON string) (Register, error) {
+	var register Register
+	err := json.Unmarshal([]byte(JSON), &register)
+	if err != nil {
+		return Register{}, err
+	}
+	return register, nil
+}
+
 //SendAll request structure
 type SendAll struct {
 	Message string `json:"message"`
@@ -117,17 +164,12 @@ func (r SendAll) String() string {
 	return string(JSON)
 }
 
-//ReceiveAll response structure
-type ReceiveAll struct {
-	Login   string `json:"login"`
-	Message string `json:"message"`
-}
-
-//String return ReceiveAll string representation
-func (r ReceiveAll) String() string {
-	JSON, err := json.Marshal(r)
+//UnwrapSendAll convert JSON string to SendAll structure
+func UnwrapSendAll(JSON string) (SendAll, error) {
+	var sendAll SendAll
+	err := json.Unmarshal([]byte(JSON), &sendAll)
 	if err != nil {
-		log.Fatalln(err)
+		return SendAll{}, err
 	}
-	return string(JSON)
+	return sendAll, nil
 }
