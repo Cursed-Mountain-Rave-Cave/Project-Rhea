@@ -12,6 +12,10 @@ import (
 var users = storage.NewUsers()
 
 func handleLogin(c *web.Connection, login web.Login) error {
+	err := users.Login(c, login)
+	if err != nil {
+		return c.SendResponse(web.NewError(err.Error()))
+	}
 	return c.SendResponse(web.NewInfo("You have been successfully logged in"))
 }
 
@@ -24,6 +28,10 @@ func handleRegister(c *web.Connection, register web.Register) error {
 }
 
 func handleSendAll(c *web.Connection, sendAll web.SendAll) error {
+	err := users.SendAll(c, sendAll)
+	if err != nil {
+		return c.SendResponse(web.NewError(err.Error()))
+	}
 	return nil
 }
 
@@ -49,7 +57,12 @@ func handleRequest(c *web.Connection, r web.Request) error {
 		}
 	case "send_all":
 		{
-
+			sendAll, err := web.UnwrapSendAll(r.Data)
+			if err != nil {
+				c.SendResponse(web.NewError(err.Error()))
+				return err
+			}
+			return handleSendAll(c, sendAll)
 		}
 	}
 	return nil
@@ -57,8 +70,11 @@ func handleRequest(c *web.Connection, r web.Request) error {
 
 func handleConnection(c *web.Connection) {
 	log.Printf("Serving %s\n", c.RemoteAddr().String())
-	defer c.Close()
 	defer log.Printf("Stop serving %s\n", c.RemoteAddr().String())
+	defer func() {
+		users.Logout(c.GetLogin())
+		c.Close()
+	}()
 	for {
 		request, err := c.ReceiveRequest()
 		if err != nil {

@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-//ReadJSON read JSON from r and return []byte
+//ReadJSON reads JSON from r and return []byte
 func ReadJSON(r *bufio.Reader) (data []byte, err error) {
 	data = []byte{}
 	balance := 0

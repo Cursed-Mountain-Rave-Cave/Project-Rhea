@@ -2,6 +2,7 @@ package web
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 )
 
@@ -168,6 +169,7 @@ func (r SendAll) String() string {
 func UnwrapSendAll(JSON string) (SendAll, error) {
 	var sendAll SendAll
 	err := json.Unmarshal([]byte(JSON), &sendAll)
+	fmt.Println(sendAll.Message)
 	if err != nil {
 		return SendAll{}, err
 	}
