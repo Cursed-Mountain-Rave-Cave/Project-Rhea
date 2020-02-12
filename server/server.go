@@ -101,6 +101,8 @@ func main() {
 	}
 	defer l.Close()
 
+	log.Println("Opyat' rabota(")
+
 	for {
 		c, err := l.Accept()
 		if err != nil {

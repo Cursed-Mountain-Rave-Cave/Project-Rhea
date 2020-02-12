@@ -40,14 +40,14 @@ func (r Response) String() string {
 	return string(JSON)
 }
 
+/*==========================================================================
+	Response structures
+===========================================================================*/
+
 //Info response structure
 type Info struct {
 	Info string `json:"info"`
 }
-
-/*==========================================================================
-	Response structures
-===========================================================================*/
 
 //String return Info string representation
 func (r Info) String() string {
